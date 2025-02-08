@@ -35,7 +35,7 @@ jobs:
           gui.py
 
     - name: Build app
-      run: pyinstaller gui.spec
+      run: pyinstaller MSUK-Description-Fixer.spec
     
     - name: Create ZIP archive
       run: cd dist && zip -r ../MSUK-Description-Fixer.zip *
