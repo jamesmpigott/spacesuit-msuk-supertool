@@ -5,6 +5,8 @@ from iptcinfo3 import IPTCInfo
 import logging
 import multiprocessing
 import queue
+from libxmp import XMPFiles, XMPMeta, consts
+from PIL import Image, ImageTk
 
 def convert_description(input_desc):
     """Standalone function for description conversion"""
@@ -28,12 +30,36 @@ def process_image_batch(input_folder, output_folder, batch, results_queue):
             new_img_path = os.path.join(output_folder, filename)
             
             info = IPTCInfo(img_path)
-            description = info['caption/abstract'].decode('utf-8', errors='ignore')
+            # Force utf-8 encoding when reading
+            description = info['caption/abstract'].decode('utf-8', errors='replace')
 
             if description:
-                info['caption/abstract'] = convert_description(description).encode('utf-8')
+                converted_description = convert_description(description)
+                # Ensure clean UTF-8 encoding when writing
+                info['caption/abstract'] = converted_description.encode('utf-8')
+                
+                # Save IPTC changes
+                info.save_as(new_img_path)
+                
+                # Add XMP update
+                try:
+                    xmpfile = XMPFiles(file_path=new_img_path, open_forupdate=True)
+                    xmp = xmpfile.get_xmp()
+                    if xmp is None:
+                        xmp = XMPMeta()
+                    
+                    # Use the correct XMP namespace and property
+                    xmp.set_property(consts.XMP_NS_DC, 'description[1]', converted_description)
+                    # Alternative namespace you might need:
+                    # xmp.set_property(consts.XMP_NS_PHOTOSHOP, 'Caption', converted_description)
+                    
+                    if xmpfile.can_put_xmp(xmp):
+                        xmpfile.put_xmp(xmp)
+                        xmpfile.close_file()
+                        logging.info("XMP data successfully saved to the image.")
+                finally:
+                    xmpfile.close_file()
 
-            info.save_as(new_img_path)
             batch_results.append(f"Processed: {filename}")
         except Exception as e:
             batch_results.append(f"Error processing {filename}: {str(e)}")
@@ -49,8 +75,38 @@ class IPTCProcessorApp:
 
         # UI Setup
         self.master = master
-        master.title("IPTC Processor")
+        master.title("Spacesuit Media - MSUK Description Fixer")
         master.geometry("600x500")
+
+        # Logo frame
+        self.logo_frame = tk.Frame(master)
+        self.logo_frame.pack(pady=20)
+
+        try:
+            logo_path = os.path.join(os.path.dirname(__file__), "assets", "spacesuit-full.png")
+            original_img = Image.open(logo_path)
+            aspect_ratio = original_img.height / original_img.width
+            new_height = int(150 * aspect_ratio)
+            resized_img = original_img.resize((150, new_height), Image.Resampling.LANCZOS)
+            logo = ImageTk.PhotoImage(resized_img)
+            logo_label = tk.Label(self.logo_frame, image=logo)
+            logo_label.image = logo  # Keep reference!
+            logo_label.pack(side=tk.LEFT, padx=10)
+        except Exception as e:
+            logging.error(f"Failed to load logo: {e}")
+
+        try:
+            msuk_logo_path = os.path.join(os.path.dirname(__file__), "assets", "msuk.png")
+            original_img = Image.open(msuk_logo_path)
+            aspect_ratio = original_img.height / original_img.width
+            new_height = int(150 * aspect_ratio)
+            resized_img = original_img.resize((150, new_height), Image.Resampling.LANCZOS)
+            msuk_logo = ImageTk.PhotoImage(resized_img)
+            msuk_logo_label = tk.Label(self.logo_frame, image=msuk_logo)
+            msuk_logo_label.image = msuk_logo  # Keep reference!
+            msuk_logo_label.pack(side=tk.RIGHT, padx=10)
+        except Exception as e:
+            logging.error(f"Failed to load logo: {e}")
 
         # Input folder selection
         self.input_folder_frame = tk.Frame(master)
@@ -59,9 +115,8 @@ class IPTCProcessorApp:
         self.input_folder_label = tk.Label(
             self.input_folder_frame, 
             text="Input Folder: Not Selected", 
-            width=50
         )
-        self.input_folder_label.pack(side=tk.LEFT, padx=10)
+        self.input_folder_label.pack(side=tk.LEFT)
 
         self.select_folder_button = tk.Button(
             self.input_folder_frame, 
@@ -70,28 +125,9 @@ class IPTCProcessorApp:
         )
         self.select_folder_button.pack(side=tk.LEFT)
 
-        # Batch size selection
-        self.batch_frame = tk.Frame(master)
-        self.batch_frame.pack(pady=10)
+        self.batch_var = 50
 
-        tk.Label(self.batch_frame, text="Batch Size:").pack(side=tk.LEFT, padx=10)
-        self.batch_var = tk.StringVar(value="100")
-        self.batch_entry = tk.Entry(
-            self.batch_frame, 
-            textvariable=self.batch_var, 
-            width=10
-        )
-        self.batch_entry.pack(side=tk.LEFT, padx=10)
-
-        # CPU Core selection
-        tk.Label(self.batch_frame, text="CPU Cores:").pack(side=tk.LEFT, padx=10)
-        self.cores_var = tk.StringVar(value=str(max(1, multiprocessing.cpu_count() - 1)))
-        self.cores_entry = tk.Entry(
-            self.batch_frame, 
-            textvariable=self.cores_var, 
-            width=10
-        )
-        self.cores_entry.pack(side=tk.LEFT, padx=10)
+        self.cores_var = max(1, multiprocessing.cpu_count() - 1)
 
         # Output folder selection
         self.output_folder_frame = tk.Frame(master)
@@ -186,8 +222,8 @@ class IPTCProcessorApp:
 
         # Get batch and core settings
         try:
-            batch_size = int(self.batch_var.get())
-            num_cores = int(self.cores_var.get())
+            batch_size = int(self.batch_var)
+            num_cores = int(self.cores_var)
         except ValueError:
             messagebox.showerror("Error", "Invalid batch size or core count")
             return
