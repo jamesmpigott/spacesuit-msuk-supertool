@@ -24,6 +24,16 @@ jobs:
         pip install -r requirements.txt
         pip install pyinstaller
     
+    - name: Create spec file
+      run: |
+        pyi-makespec --windowed \
+          --add-binary '/usr/local/lib/libexempi.dylib:lib' \
+          --add-binary '/usr/local/lib/libexempi.3.dylib:lib' \
+          --add-data 'assets/*:assets' \
+          --icon 'assets/favicon.ico' \
+          --name 'MSUK-Description-Fixer' \
+          gui.py
+
     - name: Build app
       run: pyinstaller gui.spec
     
