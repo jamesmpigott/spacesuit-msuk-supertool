@@ -16,7 +16,7 @@ build/
 *.egg-info/
 
 # PyInstaller specific
-# *.spec
+*.spec
 *.manifest
 
 # IDE and Editor folders
