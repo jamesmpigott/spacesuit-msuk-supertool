@@ -280,10 +280,15 @@ class IPTCProcessorApp:
                 # All batches processed
                 self.status_text.insert(tk.END, f"\nProcessed {processed_count} images\n")
                 self.process_button.config(state=tk.NORMAL)
-                messagebox.showinfo(
-                    "Complete", 
-                    f"Processed {processed_count} images. Output folder: {output_folder}"
+                response = messagebox.askquestion(
+                    "Complete",
+                    f"Processed {processed_count} images.\nOutput folder: {output_folder}",
+                    type='yesno',
+                    icon='info',
+                    detail='Would you like to open the output folder?'
                 )
+                if response == 'yes':
+                    open_output_folder(output_folder)
                 return
 
             # Current batch
@@ -331,6 +336,9 @@ class IPTCProcessorApp:
 
         # Start processing first batch
         process_next_batch(0)
+
+def open_output_folder(output_folder):
+    os.system(f'open "{output_folder}"')
 
 def main():
     root = tk.Tk()
