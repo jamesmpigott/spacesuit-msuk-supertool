@@ -31,14 +31,23 @@ jobs:
       run: cd dist && zip -r ../MSUK-Description-Fixer.zip MSUK-Description-Fixer.app
     
     - name: Create Github Release
+      id: create_release
       uses: actions/create-release@v1
-      if: startsWith(github.ref, 'refs/tags/')
       env:
         GITHUB_TOKEN: ${{ secrets.ACTION_SECRET }}
       with:
         tag_name: ${{ github.ref }}
-        release_name: ${{ github.ref }}
-        body: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
         draft: false
         prerelease: false
-        files: MSUK-Description-Fixer.zip
+
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.ACTION_SECRET }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./MSUK-Description-Fixer.zip
+        asset_name: MSUK-Description-Fixer.zip
+        asset_content_type: application/zip
