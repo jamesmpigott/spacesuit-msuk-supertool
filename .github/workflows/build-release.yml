@@ -19,23 +19,14 @@ jobs:
     
     - name: Install dependencies
       run: |
-        brew install exempi expat
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pyinstaller
     
     - name: Create spec file
       run: |
-        # First find the actual paths of our libraries
-        EXEMPI_PATH=$(brew list exempi | grep 'libexempi.dylib')
-        EXPAT_PATH=$(brew list expat | grep 'libexpat.dylib')
-        echo "Exempi path: $EXEMPI_PATH"
-        echo "Expat path: $EXPAT_PATH"
-
         # Create spec using the found paths
         pyi-makespec --windowed \
-          --add-binary "$EXEMPI_PATH:." \
-          --add-binary "$EXPAT_PATH:." \
           --add-data 'assets/*:assets' \
           --icon 'assets/favicon.ico' \
           --name 'MSUK-Description-Fixer' \
@@ -44,22 +35,22 @@ jobs:
     - name: Build app
       run: pyinstaller MSUK-Description-Fixer.spec
     
-    - name: Sign application
-      run: |
-        # Remove any existing signatures first
-        codesign --remove-signature "dist/MSUK-Description-Fixer.app" || true
+    # - name: Sign application
+    #   run: |
+    #     # Remove any existing signatures first
+    #     codesign --remove-signature "dist/MSUK-Description-Fixer.app" || true
         
-        # Sign all dylibs inside the app bundle
-        find "dist/MSUK-Description-Fixer.app" -name "*.dylib" -exec codesign --force --deep --sign - {} \;
+    #     # Sign all dylibs inside the app bundle
+    #     find "dist/MSUK-Description-Fixer.app" -name "*.dylib" -exec codesign --force --deep --sign - {} \;
         
-        # Sign the main app bundle
-        codesign --force --deep --sign - --timestamp --options runtime "dist/MSUK-Description-Fixer.app"
+    #     # Sign the main app bundle
+    #     codesign --force --deep --sign - --timestamp --options runtime "dist/MSUK-Description-Fixer.app"
         
-        # Remove quarantine attributes
-        xattr -cr "dist/MSUK-Description-Fixer.app"
+    #     # Remove quarantine attributes
+    #     xattr -cr "dist/MSUK-Description-Fixer.app"
         
-        # Verify the signature
-        codesign --verify --verbose "dist/MSUK-Description-Fixer.app"
+    #     # Verify the signature
+    #     codesign --verify --verbose "dist/MSUK-Description-Fixer.app"
 
     - name: Create ZIP archive
       run: zip -r MSUK-Description-Fixer.zip dist
