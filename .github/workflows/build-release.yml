@@ -23,17 +23,22 @@ jobs:
         pip install -r requirements.txt
         pip install pyinstaller
     
-    - name: Create spec file
+    # - name: Create spec file
+    #   run: |
+    #     # Create spec using the found paths
+    #     pyi-makespec --windowed \
+    #       --add-data 'assets/*:assets' \
+    #       --icon 'assets/favicon.ico' \
+    #       --name 'MSUK-Description-Fixer' \
+    #       gui.py
+
+    - name: Build app
       run: |
-        # Create spec using the found paths
-        pyi-makespec --windowed \
+        pyinstaller --windowed \
           --add-data 'assets/*:assets' \
           --icon 'assets/favicon.ico' \
           --name 'MSUK-Description-Fixer' \
           gui.py
-
-    - name: Build app
-      run: pyinstaller MSUK-Description-Fixer.spec
     
     # - name: Sign application
     #   run: |
