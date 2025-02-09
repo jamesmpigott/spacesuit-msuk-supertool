@@ -28,7 +28,9 @@ jobs:
       run: pyinstaller installer.spec
         
     - name: Create DMG installer
-      run: ./create-dmg.sh
+      run: |
+        chmod +x ./create-dmg.sh
+        ./create-dmg.sh
 
     - name: Create ZIP archive
       run: zip MSUK-Description-Fixer.zip dist/Installer dist/MSUK-Description-Fixer.dmg
