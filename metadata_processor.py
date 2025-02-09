@@ -1,6 +1,6 @@
 import os
 import logging
-import importlib.util
+import ctypes.util
 from iptcinfo3 import IPTCInfo
 
 class DependencyError(Exception):
@@ -12,15 +12,25 @@ class MetadataProcessor:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.ERROR)
         
+        # Check for Exempi library first
+        exempi_path = ctypes.util.find_library('exempi')
+        if not exempi_path:
+            raise DependencyError("exempi library not found. Please run installer")
+
         # Try to import and initialize libxmp
         try:
             from libxmp import XMPFiles, XMPMeta, consts
+            # Test if we can actually use it
+            test_file = XMPFiles()
+            test_file.close_file()
+            
             self.XMPFiles = XMPFiles
             self.XMPMeta = XMPMeta
             self.xmp_consts = consts
-        
+            
         except Exception as e:
-            raise DependencyError("exempi/libxmp library not found. Please run installer")
+            raise DependencyError("exempi library not found. Please run installer")
+
 
     def convert_description(self, input_desc):
         parts = input_desc.strip('|').split('|')
