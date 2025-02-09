@@ -29,8 +29,8 @@ jobs:
         
     - name: Create DMG installer
       run: |
-        chmod +x ./create-dmg.sh
-        ./create-dmg.sh
+        chmod +x ./create_dmg.sh
+        ./create_dmg.sh
 
     - name: Create ZIP archive
       run: zip MSUK-Description-Fixer.zip dist/Installer dist/MSUK-Description-Fixer.dmg
