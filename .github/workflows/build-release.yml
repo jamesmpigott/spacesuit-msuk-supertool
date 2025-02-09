@@ -37,7 +37,7 @@ jobs:
       run: pyinstaller MSUK-Description-Fixer.spec
     
     - name: Create ZIP archive
-      run: cd dist && zip -r ../MSUK-Description-Fixer.zip *
+      run: zip -r ../MSUK-Description-Fixer.zip dist
     
     - name: Create Github Release
       id: create_release
