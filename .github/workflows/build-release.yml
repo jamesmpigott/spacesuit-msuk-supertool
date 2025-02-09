@@ -19,42 +19,19 @@ jobs:
     
     - name: Install dependencies
       run: |
-        brew install exempi
+        brew install create-dmg 
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pyinstaller
     
-    # - name: Create spec file
-    #   run: |
-    #     # Create spec using the found paths
-    #     pyi-makespec --windowed \
-    #       --add-data 'assets/*:assets' \
-    #       --icon 'assets/favicon.ico' \
-    #       --name 'MSUK-Description-Fixer' \
-    #       gui.py
-    
-    - name: Find library paths
-      id: find-libs
-      run: |
-        EXEMPI_PATH=$(find /opt/homebrew/lib -name "libexempi.dylib" -type f)
-        echo "Found exempi at: $EXEMPI_PATH"
-        echo "exempi_path=$EXEMPI_PATH" >> $GITHUB_OUTPUT
-
-    - name: Build app
-      run: |
-        pyinstaller --windowed \
-          --add-binary '${{ steps.find-libs.outputs.exempi_path }}:.' \
-          --add-data 'assets/*:assets' \
-          --icon 'assets/favicon.ico' \
-          --name 'MSUK-Description-Fixer' \
-          gui.py
-    
-    - name: Sign application
-      run: |
-        codesign --force --deep --sign - "dist/MSUK-Description-Fixer.app"
+    - name: Build installer
+      run: pyinstaller installer.spec
+        
+    - name: Create DMG installer
+      run: ./create-dmg.sh
 
     - name: Create ZIP archive
-      run: cd dist && zip -r ../MSUK-Description-Fixer.zip MSUK-Description-Fixer.app
+      run: zip MSUK-Description-Fixer.zip dist/Installer dist/MSUK-Description-Fixer.dmg
     
     - name: Create Github Release
       id: create_release
