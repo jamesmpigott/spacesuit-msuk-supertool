@@ -19,6 +19,7 @@ jobs:
     
     - name: Install dependencies
       run: |
+        brew install exempi
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install pyinstaller
@@ -31,10 +32,18 @@ jobs:
     #       --icon 'assets/favicon.ico' \
     #       --name 'MSUK-Description-Fixer' \
     #       gui.py
+    
+    - name: Find library paths
+      id: find-libs
+      run: |
+        EXEMPI_PATH=$(find /opt/homebrew/lib -name "libexempi.dylib" -type f)
+        echo "Found exempi at: $EXEMPI_PATH"
+        echo "exempi_path=$EXEMPI_PATH" >> $GITHUB_OUTPUT
 
     - name: Build app
       run: |
         pyinstaller --windowed \
+          --add-binary '${{ steps.find-libs.outputs.exempi_path }}:.' \
           --add-data 'assets/*:assets' \
           --icon 'assets/favicon.ico' \
           --name 'MSUK-Description-Fixer' \
