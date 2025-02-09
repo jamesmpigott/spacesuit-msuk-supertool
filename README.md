@@ -8,6 +8,25 @@ Small application to convert image descriptions (both IPTC and XMP) from Spacesu
 4. Run the `.dmg` file and drag to "Applications"
 5. Select and run "MSUK-Description-Fixer" from launchpad, spotlight, [RayCast](https://www.raycast.com/) etc
 
+> [!IMPORTANT]
+> ## macOS Security Notices
+> When running the application for the first time, you may see security warnings. This is normal for applications not from the App Store. Here's how to handle them:
+> ### Method 1: Right-click to Open (Recommended)
+> 1. In Finder, right-click (or Control-click) the app
+> 2. Select "Open" from the context menu
+> 3. Click "Open" in the security dialog
+> 4. Only needs to be done once
+> ### Method 2: Terminal Command
+> ```bash
+> xattr -d com.apple.quarantine "/Applications/MSUK-Description-Fixer.app"
+> ```
+> ### For the Installation Script
+> The same process applies to the installer:
+> 1. Right-click `installer.app`
+> 2. Select "Open"
+> 3. Click "Open" in the security dialog
+> Note: These steps are necessary because this is an open-source application not signed with an Apple Developer certificate.
+
 ## Development
 
 If you're me ([jamesmpigott](https://github.com/jamesmpigott)) or otherwise insane, here's how you can get this repo setup for local development.
