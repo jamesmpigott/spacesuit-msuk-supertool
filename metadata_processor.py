@@ -12,15 +12,26 @@ class MetadataProcessor:
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.ERROR)
         
-        # Check for Exempi library first
-        exempi_path = ctypes.util.find_library('exempi')
-        if not exempi_path:
-            raise DependencyError("exempi library not found. Please run installer")
+        # Check common library locations
+        library_paths = [
+            '/usr/local/lib/libexempi.dylib',
+            '/opt/homebrew/lib/libexempi.dylib',
+            '/usr/lib/libexempi.dylib'
+        ]
+        
+        found = False
+        for path in library_paths:
+            if os.path.exists(path):
+                found = True
+                os.environ['DYLD_LIBRARY_PATH'] = os.path.dirname(path)
+                break
+        
+        if not found:
+            raise DependencyError("exempi library not found. Please run: brew install exempi")
 
         # Try to import and initialize libxmp
         try:
             from libxmp import XMPFiles, XMPMeta, consts
-            # Test if we can actually use it
             test_file = XMPFiles()
             test_file.close_file()
             
@@ -29,7 +40,7 @@ class MetadataProcessor:
             self.xmp_consts = consts
             
         except Exception as e:
-            raise DependencyError("exempi library not found. Please run installer")
+            raise DependencyError(f"Failed to initialize XMP: {str(e)}\nDYLD_LIBRARY_PATH={os.environ.get('DYLD_LIBRARY_PATH', 'not set')}")
 
 
     def convert_description(self, input_desc):

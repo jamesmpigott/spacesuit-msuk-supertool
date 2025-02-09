@@ -3,13 +3,13 @@
 
 a = Analysis(
     ['gui.py'],
-    pathex=[],
+    pathex=['/usr/local/lib', '/opt/homebrew/lib'],
     binaries=[],
     datas=[('assets/*', 'assets')],
     hiddenimports=['libxmp'],
     hookspath=[],
     hooksconfig={},
-    runtime_hooks=[],
+    runtime_hooks=['runtime_hooks/init_libxmp.py'],
     excludes=[],
     noarchive=False,
     optimize=0,
