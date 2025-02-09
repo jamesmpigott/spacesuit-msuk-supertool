@@ -5,62 +5,24 @@ from iptcinfo3 import IPTCInfo
 import logging
 import multiprocessing
 import queue
-from libxmp import XMPFiles, XMPMeta, consts
 from PIL import Image, ImageTk
-
-def convert_description(input_desc):
-    """Standalone function for description conversion"""
-    parts = input_desc.strip('|').split('|')
-    cleaned_parts = []
-    for part in parts:
-        if not part.strip():
-            continue
-        if ':' in part:
-            key, value = part.split(':', 1)
-            value = value.strip()
-            cleaned_parts.append(value)
-    return ', '.join(cleaned_parts)
+from metadata_processor import MetadataProcessor
 
 def process_image_batch(input_folder, output_folder, batch, results_queue):
-    """Process a batch of images in a separate process"""
     batch_results = []
+    processor = MetadataProcessor()
+        
     for filename in batch:
         try:
             img_path = os.path.join(input_folder, filename)
             new_img_path = os.path.join(output_folder, filename)
             
-            info = IPTCInfo(img_path)
-            # Force utf-8 encoding when reading
-            description = info['caption/abstract'].decode('utf-8', errors='replace')
-
-            if description:
-                converted_description = convert_description(description)
-                # Ensure clean UTF-8 encoding when writing
-                info['caption/abstract'] = converted_description.encode('utf-8')
-                
-                # Save IPTC changes
-                info.save_as(new_img_path)
-                
-                # Add XMP update
-                try:
-                    xmpfile = XMPFiles(file_path=new_img_path, open_forupdate=True)
-                    xmp = xmpfile.get_xmp()
-                    if xmp is None:
-                        xmp = XMPMeta()
-                    
-                    # Use the correct XMP namespace and property
-                    xmp.set_property(consts.XMP_NS_DC, 'description[1]', converted_description)
-                    # Alternative namespace you might need:
-                    # xmp.set_property(consts.XMP_NS_PHOTOSHOP, 'Caption', converted_description)
-                    
-                    if xmpfile.can_put_xmp(xmp):
-                        xmpfile.put_xmp(xmp)
-                        xmpfile.close_file()
-                        logging.info("XMP data successfully saved to the image.")
-                finally:
-                    xmpfile.close_file()
-
-            batch_results.append(f"Processed: {filename}")
+            success, message = processor.process_image(img_path, new_img_path)
+            if success:
+                batch_results.append(f"Processed: {filename}")
+            else:
+                batch_results.append(f"Error processing {filename}: {message}")
+        
         except Exception as e:
             batch_results.append(f"Error processing {filename}: {str(e)}")
     

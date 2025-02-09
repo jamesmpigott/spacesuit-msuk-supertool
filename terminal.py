@@ -1,36 +1,16 @@
 import os
-from iptcinfo3 import IPTCInfo
 import logging
 from progress.bar import ChargingBar
-from libxmp import XMPFiles, XMPMeta, consts
+from metadata_processor import MetadataProcessor
 
 iptcinfo_logger = logging.getLogger('iptcinfo')
 iptcinfo_logger.setLevel(logging.ERROR)
 
 logging.basicConfig(level=logging.DEBUG)
 
-def convert_description(input):
-    parts = input.strip('|').split('|')
-    
-    # Filter and clean the parts
-    cleaned_parts = []
-
-    for part in parts:
-        # Skip empty parts
-        if not part.strip():
-            continue
-        
-        # Split into key and value
-        if ':' in part:
-            key, value = part.split(':', 1)
-            # Trim whitespace from the value
-            value = value.strip()
-            cleaned_parts.append(value)
-
-    return ', '.join(cleaned_parts)
-
-
 def process_images(input_folder):
+    processor = MetadataProcessor()
+
     included_extensions = ['.png', '.jpg', '.jpeg', '.tiff', '.bmp', '.gif']
     files = [fn for fn in os.listdir(input_folder)
         if any(fn.endswith(ext) for ext in included_extensions)]
@@ -47,42 +27,10 @@ def process_images(input_folder):
                     img_path = os.path.join(input_folder, filename)
                     new_img_path = os.path.join(output_folder, filename)
                     
-                    try:
-                        info = IPTCInfo(img_path)
-                        # Force utf-8 encoding when reading
-                        description = info['caption/abstract'].decode('utf-8', errors='replace')
+                    success, message = processor.process_image(img_path, new_img_path)
+                    if not success:
+                        print(f"Error processing {filename}: {message}")                
 
-                        if description:
-                            converted_description = convert_description(description)
-                            # Ensure clean UTF-8 encoding when writing
-                            info['caption/abstract'] = converted_description.encode('utf-8')
-                            
-                            # Save IPTC changes
-                            info.save_as(new_img_path)
-                            
-                            # Add XMP update
-                            try:
-                                xmpfile = XMPFiles(file_path=new_img_path, open_forupdate=True)
-                                xmp = xmpfile.get_xmp()
-                                if xmp is None:
-                                    xmp = XMPMeta()
-                                
-                                # Use the correct XMP namespace and property
-                                xmp.set_property(consts.XMP_NS_DC, 'description[1]', converted_description)
-                                # Alternative namespace you might need:
-                                # xmp.set_property(consts.XMP_NS_PHOTOSHOP, 'Caption', converted_description)
-                                
-                                if xmpfile.can_put_xmp(xmp):
-                                    xmpfile.put_xmp(xmp)
-                                    xmpfile.close_file()
-                                    logging.info("XMP data successfully saved to the image.")
-                            finally:
-                                xmpfile.close_file()
-
-                    except Exception as e:
-                        print(f"Error processing {filename}: {str(e)}")
-
-                
                 bar.next()
     else:
         raise Exception(f"Directory '{input_folder}' contains no images.")

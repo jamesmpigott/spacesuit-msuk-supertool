@@ -1,3 +1,4 @@
-iptcinfo3>=2.1.4
-pillow>=10.0.0
-python-xmp-toolkit>=2.0.1
+pillow
+progress
+iptcinfo3
+python-xmp-toolkit
