@@ -11,16 +11,16 @@ class MetadataProcessor:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.ERROR)
+        
         # Try to import and initialize libxmp
         try:
             from libxmp import XMPFiles, XMPMeta, consts
-            # Test if Exempi is actually available
-            XMPFiles(file_path=None)
             self.XMPFiles = XMPFiles
             self.XMPMeta = XMPMeta
             self.xmp_consts = consts
+        
         except Exception as e:
-            raise DependencyError("Exempi library not found. Please run installer")
+            raise DependencyError("exempi/libxmp library not found. Please run installer")
 
     def convert_description(self, input_desc):
         parts = input_desc.strip('|').split('|')
@@ -52,12 +52,12 @@ class MetadataProcessor:
             
             # Update XMP
             try:
-                xmpfile = XMPFiles(file_path=output_path, open_forupdate=True)
+                xmpfile = self.XMPFiles(file_path=output_path, open_forupdate=True)
                 xmp = xmpfile.get_xmp()
                 if xmp is None:
-                    xmp = XMPMeta()
+                    xmp = self.XMPMeta()
                 
-                xmp.set_property(consts.XMP_NS_DC, 'description[1]', converted_description)
+                xmp.set_property(self.xmp_consts.XMP_NS_DC, 'description[1]', converted_description)
                 
                 if xmpfile.can_put_xmp(xmp):
                     xmpfile.put_xmp(xmp)
