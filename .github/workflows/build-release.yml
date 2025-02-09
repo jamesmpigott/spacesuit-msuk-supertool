@@ -40,25 +40,12 @@ jobs:
           --name 'MSUK-Description-Fixer' \
           gui.py
     
-    # - name: Sign application
-    #   run: |
-    #     # Remove any existing signatures first
-    #     codesign --remove-signature "dist/MSUK-Description-Fixer.app" || true
-        
-    #     # Sign all dylibs inside the app bundle
-    #     find "dist/MSUK-Description-Fixer.app" -name "*.dylib" -exec codesign --force --deep --sign - {} \;
-        
-    #     # Sign the main app bundle
-    #     codesign --force --deep --sign - --timestamp --options runtime "dist/MSUK-Description-Fixer.app"
-        
-    #     # Remove quarantine attributes
-    #     xattr -cr "dist/MSUK-Description-Fixer.app"
-        
-    #     # Verify the signature
-    #     codesign --verify --verbose "dist/MSUK-Description-Fixer.app"
+    - name: Sign application
+      run: |
+        codesign --force --deep --sign - "dist/MSUK-Description-Fixer.app"
 
     - name: Create ZIP archive
-      run: zip -r MSUK-Description-Fixer.zip dist
+      run: cd dist && zip -r ../MSUK-Description-Fixer.zip MSUK-Description-Fixer.app
     
     - name: Create Github Release
       id: create_release
