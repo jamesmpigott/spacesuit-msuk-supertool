@@ -1,12 +1,11 @@
 import os
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
-from iptcinfo3 import IPTCInfo
 import logging
 import multiprocessing
 import queue
 from PIL import Image, ImageTk
-from metadata_processor import MetadataProcessor
+from metadata_processor import MetadataProcessor, DependencyError
 
 def process_image_batch(input_folder, output_folder, batch, results_queue):
     batch_results = []
@@ -304,7 +303,14 @@ def open_output_folder(output_folder):
 
 def main():
     root = tk.Tk()
-    app = IPTCProcessorApp(root)
+    try: 
+        MetadataProcessor()
+        app = IPTCProcessorApp(root)
+    except DependencyError as e:
+        messagebox.showerror("Dependencies Missing", str(e))
+        root.destroy()
+        return
+    
     root.mainloop()
 
 if __name__ == "__main__":

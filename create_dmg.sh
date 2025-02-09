@@ -24,10 +24,6 @@ else
     echo "pyinstaller already installed."
 fi
 
-# 4. Clean up previous builds
-echo "Cleaning up previous builds..."
-rm -rf build dist/*
-
 # 5. Convert Python script to an application bundle
 echo "Converting Python script to macOS app bundle..."
 pyinstaller gui.spec

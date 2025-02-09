@@ -1,15 +1,28 @@
 import os
 import logging
-from libxmp import XMPFiles, XMPMeta, consts
+import importlib.util
 from iptcinfo3 import IPTCInfo
+
+class DependencyError(Exception):
+    """Custom exception for missing dependencies"""
+    pass
 
 class MetadataProcessor:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.ERROR)
+        # Try to import and initialize libxmp
+        try:
+            from libxmp import XMPFiles, XMPMeta, consts
+            # Test if Exempi is actually available
+            XMPFiles(file_path=None)
+            self.XMPFiles = XMPFiles
+            self.XMPMeta = XMPMeta
+            self.xmp_consts = consts
+        except Exception as e:
+            raise DependencyError("Exempi library not found. Please run installer")
 
     def convert_description(self, input_desc):
-        """Convert MSUK description format to clean text"""
         parts = input_desc.strip('|').split('|')
         cleaned_parts = []
         
@@ -24,7 +37,6 @@ class MetadataProcessor:
         return ', '.join(cleaned_parts)
 
     def process_image(self, input_path, output_path):
-        """Process a single image's metadata"""
         try:
             info = IPTCInfo(input_path)
             description = info['caption/abstract'].decode('utf-8', errors='replace')
