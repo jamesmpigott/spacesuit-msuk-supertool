@@ -1,5 +1,8 @@
-# SSM - MSUK Image Description Fixer
+# Spacesuit MSUK Supertool
 Small application to convert image descriptions (both IPTC and XMP) from Spacesuit Media's to Motorsport-UK's preferred format.
+
+> [!NOTE] Update 02/03/2025
+> This now includes a tool to create a csv based on a rally's entry list (from rallies.info)
 
 ## macOS Installation
 1. Download the latest release from [releases](https://github.com/jamesmpigott/iptc/releases)
