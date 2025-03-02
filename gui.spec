@@ -22,7 +22,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='MSUK-Description-Fixer',
+    name='Spacesuit-MSUK-SuperTool',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -40,6 +40,6 @@ exe = EXE(
 
 app = BUNDLE(
     exe,
-    name='MSUK-Description-Fixer.app',
+    name='Spacesuit-MSUK-SuperTool.app',
     icon='assets/favicon.ico',
 )
