@@ -6,6 +6,8 @@ import multiprocessing
 import queue
 from PIL import Image, ImageTk
 from metadata_processor import MetadataProcessor, DependencyError
+from rally_data import RallyData
+import validators 
 
 def process_image_batch(input_folder, output_folder, batch, results_queue):
     batch_results = []
@@ -29,18 +31,12 @@ def process_image_batch(input_folder, output_folder, batch, results_queue):
 
 class IPTCProcessorApp:
     def __init__(self, master):
-        # Logging setup
-        logging.basicConfig(level=logging.ERROR)
-        iptcinfo_logger = logging.getLogger('iptcinfo')
-        iptcinfo_logger.setLevel(logging.ERROR)
-
-        # UI Setup
+        # Base setup
         self.master = master
-        master.title("Spacesuit Media - MSUK Description Fixer")
-        master.geometry("600x500")
+        master.title("Spacesuit Media - Tools")
+        master.geometry("600x550")
 
-        # Logo frame
-        self.logo_frame = tk.Frame(master)
+        self.logo_frame = tk.Frame(self.master)
         self.logo_frame.pack(pady=20)
 
         try:
@@ -69,8 +65,110 @@ class IPTCProcessorApp:
         except Exception as e:
             logging.error(f"Failed to load logo: {e}")
 
-        # Input folder selection
-        self.input_folder_frame = tk.Frame(master)
+        # Create notebook
+        self.notebook = ttk.Notebook(master)
+        self.notebook.pack(expand=True, fill='both')
+
+        # Create tabs
+        self.iptc_tab = ttk.Frame(self.notebook)
+        self.csv_tab = ttk.Frame(self.notebook)
+        
+        # Add tabs to notebook
+        self.notebook.add(self.iptc_tab, text='IPTC Tool')
+        self.notebook.add(self.csv_tab, text='CSV Tool')
+
+        # Initialize tab contents
+        self.init_iptc_tab()
+
+        self.init_csv_tab()
+
+    def init_csv_tab(self):
+        self.file_name = tk.StringVar(value="rally_entries.csv")
+        self.url = tk.StringVar()
+        self.csv_output_folder = None
+
+        self.url.trace_add("write", self.check_csv_fields)
+        self.file_name.trace_add("write", self.check_csv_fields)
+
+        self.csv_output_folder_frame = tk.Frame(self.csv_tab)
+        self.csv_output_folder_frame.pack(pady=10)
+
+        self.csv_output_folder_label = tk.Label(
+            self.csv_output_folder_frame, 
+            text="Output Folder: Not Selected", 
+        )
+
+        self.csv_output_folder_label.pack(side=tk.LEFT)
+
+        self.csv_select_folder_button = tk.Button(
+            self.csv_output_folder_frame, 
+            text="Select Output Folder", 
+            command=self.select_csv_output_folder
+        )
+        self.csv_select_folder_button.pack(side=tk.LEFT)
+
+        self.file_name_frame = tk.Frame(self.csv_tab)
+        self.file_name_frame.pack(pady=10)
+        self.file_name_label = tk.Label(
+            self.file_name_frame,
+            text="Output File name"
+        )
+        self.file_name_label.pack(side=tk.LEFT)
+
+
+        self.file_name_field = tk.Entry(
+            self.file_name_frame,
+            textvariable=self.file_name
+        )
+        self.file_name_field.pack(side=tk.RIGHT)
+
+        self.url_frame = tk.Frame(self.csv_tab)
+        self.url_frame.pack(pady=10)
+
+        self.url_label = tk.Label(
+            self.url_frame,
+            text="Url"
+        )
+        self.url_label.pack(side=tk.LEFT)
+
+        self.url_field = tk.Entry(
+            self.url_frame,
+            textvariable=self.url
+        )
+        self.url_field.pack(side=tk.RIGHT)
+
+        self.create_csv_button = tk.Button(
+            self.csv_tab,
+            text="Create CSV",
+            command=self.create_csv,
+            state=tk.DISABLED
+        )
+        self.create_csv_button.pack()
+
+    def create_csv(self):
+        if not validators.url(self.url.get()):
+            messagebox.showerror("Invalid URL.", f"{self.url.get()} is not a valid url.")
+            return
+
+        rally_data = RallyData(self.url.get())
+        rally_data.fetch_data()
+        rally_data.transform_data()
+        rally_data.export_to_csv(self.csv_output_folder, self.file_name.get())
+
+    def check_csv_fields(self, *args):
+        # Get the current values
+        url_value = self.url.get()
+        filename_value = self.file_name.get()
+        
+        # Check if all required fields have values
+        if url_value and filename_value and self.csv_output_folder:
+            self.create_csv_button.config(state=tk.NORMAL)
+        else:
+            self.create_csv_button.config(state=tk.DISABLED)
+
+    def init_iptc_tab(self):
+        # Input folder frame - update parent
+        self.input_folder_frame = tk.Frame(self.iptc_tab)
         self.input_folder_frame.pack(pady=10)
 
         self.input_folder_label = tk.Label(
@@ -91,7 +189,7 @@ class IPTCProcessorApp:
         self.cores_var = max(1, multiprocessing.cpu_count() - 1)
 
         # Output folder selection
-        self.output_folder_frame = tk.Frame(master)
+        self.output_folder_frame = tk.Frame(self.iptc_tab)
         self.output_folder_frame.pack(pady=10)
 
         self.use_default_var = tk.BooleanVar(value=True)
@@ -111,11 +209,11 @@ class IPTCProcessorApp:
         )
         self.select_output_button.pack(side=tk.LEFT, padx=10)
 
-        self.output_folder_label = tk.Label(master, text="Output Folder: MSUK (default)")
+        self.output_folder_label = tk.Label(self.iptc_tab, text="Output Folder: MSUK (default)")
         self.output_folder_label.pack(pady=5)
 
         # Progress indicators
-        self.progress_frame = tk.Frame(master)
+        self.progress_frame = tk.Frame(self.iptc_tab)
         self.progress_frame.pack(pady=10)
 
         self.total_progress_label = tk.Label(self.progress_frame, text="Total Progress:")
@@ -130,21 +228,21 @@ class IPTCProcessorApp:
 
         # Status text
         self.status_text = tk.Text(
-            master, 
+            self.iptc_tab, 
             height=10, 
             width=70, 
             state='disabled'
         )
         self.status_text.pack(pady=10)
 
-        # Process button
+        # Process button - explicitly parented to iptc_tab
         self.process_button = tk.Button(
-            master, 
-            text="Process Images", 
+            self.iptc_tab,  # Changed from self.master
+            text="Process Images",
             command=self.start_processing,
             state=tk.DISABLED
         )
-        self.process_button.pack(pady=10)
+        self.process_button.pack()
 
         # State variables
         self.input_folder = None
@@ -167,6 +265,15 @@ class IPTCProcessorApp:
                 text=f"Output Folder: {self.output_folder}"
             )
 
+    def select_csv_output_folder(self):
+        selected_folder = filedialog.askdirectory()
+        if selected_folder:
+            self.csv_output_folder = selected_folder
+            self.csv_output_folder_label.config(
+                text=f"Output Folder: {self.csv_output_folder}"
+            )
+            self.check_csv_fields()
+    
     def select_input_folder(self):
         self.input_folder = filedialog.askdirectory()
         if self.input_folder:
