@@ -33,7 +33,7 @@ jobs:
         ./create_dmg.sh
 
     - name: Create ZIP archive
-      run: zip MSUK-Description-Fixer.zip dist/Installer dist/MSUK-Description-Fixer.dmg
+      run: zip Spacesuit-MSUK-SuperTool.zip dist/Installer dist/Spacesuit-MSUK-SuperTool.dmg
     
     - name: Create Github Release
       id: create_release
@@ -53,6 +53,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.ACTION_SECRET }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./MSUK-Description-Fixer.zip
-        asset_name: MSUK-Description-Fixer.zip
+        asset_path: ./Spacesuit-MSUK-SuperTool.zip
+        asset_name: Spacesuit-MSUK-SuperTool.zip
         asset_content_type: application/zip
