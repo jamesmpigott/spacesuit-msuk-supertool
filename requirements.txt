@@ -2,3 +2,5 @@ pillow
 progress
 iptcinfo3
 python-xmp-toolkit
+requests
+validators

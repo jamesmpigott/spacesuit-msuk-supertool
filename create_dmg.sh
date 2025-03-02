@@ -32,17 +32,17 @@ pyinstaller gui.spec
 echo "Creating DMG installer..."
 mkdir -p dist/dmg
 rm -rf dist/dmg/*
-cp -r "dist/MSUK-Description-Fixer.app" dist/dmg
+cp -r "dist/Spacesuit-MSUK-SuperTool.app" dist/dmg
 create-dmg \
-  --volname "MSUK-Description-Fixer" \
+  --volname "Spacesuit-MSUK-SuperTool" \
   --volicon "assets/favicon.ico" \
   --window-pos 200 120 \
   --window-size 600 300 \
   --icon-size 100 \
-  --icon "MSUK-Description-Fixer.app" 175 120 \
-  --hide-extension "MSUK-Description-Fixer.app" \
+  --icon "Spacesuit-MSUK-SuperTool.app" 175 120 \
+  --hide-extension "Spacesuit-MSUK-SuperTool.app" \
   --app-drop-link 425 120 \
-  "dist/MSUK-Description-Fixer.dmg" \
+  "dist/Spacesuit-MSUK-SuperTool.dmg" \
   "dist/dmg/"
 
 echo "Packaging complete. You can find the DMG installer in the dist/ directory."
