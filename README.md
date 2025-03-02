@@ -1,7 +1,9 @@
 # Spacesuit MSUK Supertool
 Small application to convert image descriptions (both IPTC and XMP) from Spacesuit Media's to Motorsport-UK's preferred format.
 
-> [!NOTE] Update 02/03/2025
+> [!NOTE]
+> ___Update 02/03/2025___
+> 
 > This now includes a tool to create a csv based on a rally's entry list (from rallies.info)
 
 ## macOS Installation
